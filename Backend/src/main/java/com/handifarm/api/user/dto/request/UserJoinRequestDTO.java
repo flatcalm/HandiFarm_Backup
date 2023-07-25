@@ -26,7 +26,7 @@ public class UserJoinRequestDTO {
     @NotBlank
     private String userName;
 
-    @Size(min = 2, max = 8)
+    @Size(max = 15)
     private String userNick;
 
     @NotBlank
@@ -35,28 +35,28 @@ public class UserJoinRequestDTO {
 
     @NotBlank
     @Size(min = 8, max = 11)
-    private String userPhoneNum;
+    private String userPhone;
 
     @NotBlank
-    private String addrBasic;
+    private String userAddrBasic;
 
     @NotBlank
-    private String addrDetail;
+    private String userAddrDetail;
 
     @NotNull
-    private int addrZipCode;
+    private int userPostcode;
 
     public User dtoToEntity() {
         return User.builder()
                 .userId(this.userId)
                 .userPw(this.userPw)
                 .userName(this.userName)
-                .userNick(this.userNick)
+                .userNick(this.userNick != null ? this.userNick : this.userId)
                 .userEmail(this.userEmail)
-                .userPhoneNum(this.userPhoneNum)
-                .addrBasic(this.addrBasic)
-                .addrDetail(this.addrDetail)
-                .addrZipCode(this.addrZipCode)
+                .userPhone(this.userPhone)
+                .userAddrBasic(this.userAddrBasic)
+                .userAddrDetail(this.userAddrDetail)
+                .userPostcode(this.userPostcode)
                 .build();
     }
 

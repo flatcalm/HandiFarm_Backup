@@ -23,8 +23,14 @@ spring:
 
 logging.level:
   org.hibernate.SQL: debug
+  org.springframework.web: ERROR
 
 # swagger setting
 spring-doc:
   swagger-ui:
     path: /myapi.html
+
+logging:
+  level:
+    org.springframework: DEBUG
+

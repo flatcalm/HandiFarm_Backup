@@ -1,7 +1,9 @@
 package com.handifarm.api.user.controller;
 
+import com.handifarm.api.user.dto.request.UserInfoModifyRequestDTO;
 import com.handifarm.api.user.dto.request.UserJoinRequestDTO;
 import com.handifarm.api.user.dto.request.UserLoginRequestDTO;
+import com.handifarm.api.user.dto.response.UserInfoResponseDTO;
 import com.handifarm.api.user.dto.response.UserLoginResponseDTO;
 import com.handifarm.api.user.service.UserService;
 import com.handifarm.jwt.TokenUserInfo;
@@ -14,10 +16,13 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Map;
+
 @RestController
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/api/user")
+//@CrossOrigin
 public class UserController {
 
     private final UserService service;
@@ -32,6 +37,24 @@ public class UserController {
         log.info("ID : {}, 중복 여부 : {}", userId, check);
 
         return ResponseEntity.ok().body(check);
+    }
+
+    // 휴대폰 인증번호 요청
+    @PostMapping("/phoneNumAuthenticate")
+    public ResponseEntity<?> sendAuthenticationNumber(@RequestBody Map<String, String> inputPhoneNum) {
+
+        log.info("컨트롤러에서 넘겨받은 변수 : {}", inputPhoneNum);
+
+        String sendTo = inputPhoneNum.get("sendTo");
+
+        if (sendTo == null || sendTo.trim().equals("")) {
+            return ResponseEntity.badRequest().body("휴대폰 번호가 넘어오지 않음.");
+        }
+
+        String authenticationNumber = service.sendMessage(sendTo);
+        log.info("{} 번호의 인증번호 : {}", sendTo, authenticationNumber);
+
+        return ResponseEntity.ok().body(authenticationNumber);
     }
 
     // 가입 요청 처리
@@ -50,7 +73,6 @@ public class UserController {
             log.warn(e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
         }
-
     }
 
     // 로그인 요청 처리
@@ -67,6 +89,37 @@ public class UserController {
             return ResponseEntity.ok().body(responseDTO);
         } catch (Exception e) {
             log.warn(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // 마이페이지 진입 시 유저 정보 반환
+    @GetMapping("/mypage")
+    public ResponseEntity<?> mypage(@AuthenticationPrincipal TokenUserInfo userInfo) {
+        try {
+            UserInfoResponseDTO userInfoResponseDTO = service.userInfo(userInfo);
+            return ResponseEntity.ok().body(userInfoResponseDTO);
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // 유저 정보 수정 요청 처리
+    @PutMapping("/modifyUser")
+    public ResponseEntity<?> modifyInfo(@AuthenticationPrincipal TokenUserInfo userInfo,
+                                        @Validated @RequestPart("userInfo")UserInfoModifyRequestDTO requestDTO,
+                                        @RequestPart(value = "profileImg", required = false) MultipartFile profileImg,
+                                        BindingResult result) {
+        if(result.hasErrors()) {
+            log.warn(result.toString());
+            return ResponseEntity.badRequest().body(result.getFieldError());
+        }
+
+        try {
+            UserInfoResponseDTO userInfoResponseDTO = service.userInfoModify(userInfo, requestDTO, profileImg);
+            return ResponseEntity.ok().body(userInfoResponseDTO);
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
